@@ -53,7 +53,7 @@ class DiscordController extends Controller
             DiscordSessionKeys::EXPIRES_IN => Carbon::now()->addSeconds($tokenData->expires_in)->toString(),
         ]);
 
-        return response()->json([], 200);
+        return response()->json([], 302);
     }
 
     public function getUserData(): JsonResponse
