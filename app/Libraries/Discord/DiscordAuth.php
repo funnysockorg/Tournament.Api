@@ -15,7 +15,6 @@ class DiscordAuth
             'grant_type' => 'authorization_code',
             'code' => $discordCode,
             'redirect_uri' => route('api.discord.callback'),
-
         ];
 
         $clientId = config('discord.client_id');

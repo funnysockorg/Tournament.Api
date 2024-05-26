@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Libraries\Discord\DiscordUserData;
+use App\Libraries\Discord\DTO\DiscordTokenDataDTO;
 use App\Libraries\Discord\DTO\DiscordUserDTO;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -34,8 +34,15 @@ class User extends Authenticatable
         ];
     }
 
-    public function build(DiscordUserDTO $discordUserDTO): void
+    public static function createFromDiscordData(DiscordUserDTO $userDTO, DiscordTokenDataDTO $tokenDTO): void
     {
-        
+        self::create([
+            'discord_id' => $userDTO->getDiscordId(),
+            'name' => $userDTO->getName(),
+            'avatar_hash' => $userDTO->getAvatarHash(),
+            'access_token' => $tokenDTO->getAccessToken(),
+            'refresh_token' => $tokenDTO->getAccessToken(),
+            'token_expires_in' => $tokenDTO->getExpiresIn(),
+        ]);
     }
 }

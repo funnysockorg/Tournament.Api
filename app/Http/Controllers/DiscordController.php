@@ -3,12 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Libraries\Discord\DiscordAuth;
-use App\Libraries\Discord\DiscordSessionKeys;
 use App\Libraries\Discord\DiscordUserData;
+use App\Libraries\Discord\DTO\DiscordTokenDataDTO;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 
 class DiscordController extends Controller
 {
@@ -16,32 +14,42 @@ class DiscordController extends Controller
     {
         $response = (new DiscordAuth())->auth($code);
 
-        $tokenData = json_decode($response->body());
+        $tokenDataDTO = new DiscordTokenDataDTO($response);
 
-        if (!empty($tokenData->error_description)) {
+        if (!empty($tokenDataDTO->getErrorDescription())) {
             return response()->json([
                 'status' => 'failed',
-                'reason' => $tokenData->error_description,
+                'reason' => $tokenDataDTO->getErrorDescription(),
             ], 400);
         }
 
-        return respinse()->json([
-            'token' => $tokenData->access_token,
-            'expiresIn' => Carbon::now()->addSeconds($tokenData->expires_in)->timestamp,
-        ], 200);
+        $userDataDTO = (new DiscordUserData())->getUserData($tokenDataDTO->getAccessToken());
 
-    }
-
-    public function getUserData(): JsonResponse
-    {
-        $userToken = session()->get(DiscordSessionKeys::ACCESS_TOKEN);
-
-        $userData = (new DiscordUserData())->getUserData($userToken);
-
-        if ($userData->isEmpty()) {
-            return response()->json(['error' => 'Ошибка! Данные пользователя не удалось получить!']);
+        if (empty($userDataDTO->isEmpty())) {
+            return response()->json([
+                'status' => 'failed',
+                'reason' => 'Данные полученные по токену оказались пустыми!',
+            ], 400);
         }
 
-        return response()->json($userData->toJsonString(), 200);
+        User::createFromDiscordData($userData, $tokenDataDTO)
+
+        return response()->json([
+            'token' => $tokenDataDTO->getAccessToken(),
+            'expiresIn' => $tokenDataDTO->getExpiresIn()->timestamp,
+        ], 200);
     }
+
+    // public function getUserData(): JsonResponse
+    // {
+    //     $userToken = session()->get(DiscordSessionKeys::ACCESS_TOKEN);
+
+    //     $userData = (new DiscordUserData())->getUserData($userToken);
+
+    //     if ($userData->isEmpty()) {
+    //         return response()->json(['error' => 'Ошибка! Данные пользователя не удалось получить!']);
+    //     }
+
+    //     return response()->json($userData->toJsonString(), 200);
+    // }
 }

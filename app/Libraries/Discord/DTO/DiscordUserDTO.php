@@ -8,6 +8,7 @@ class DiscordUserDTO
 {
     private string $discordId;
     private string $name;
+    private string $avatarHash;
 
     public function __construct(Response $response)
     {
@@ -20,6 +21,25 @@ class DiscordUserDTO
         if (!empty($userData->username)) {
             $this->name = $userData->username;
         }
+
+        if (!empty($userData->avatar)) {
+            $this->avatarHash = $userData->avatar;
+        }
+    }
+
+    public function getDiscordId(): string
+    {
+        return $this->discordId;
+    }
+
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function getAvatarHash(): string
+    {
+        return $this->avatarHash;
     }
 
     public function toJsonString(): string
@@ -27,11 +47,14 @@ class DiscordUserDTO
         return json_encode([
             'user_id' => $this->discordId,
             'user_name' => $this->name,
+            'avatar_hash' => $this->avatarHash,
         ]);
     }
 
     public function isEmpty(): bool
     {
-        return empty($this->discordId) || empty($this->name);
+        return empty($this->discordId) 
+        || empty($this->name) 
+        || empty($this->avatarHash);
     }
 }
